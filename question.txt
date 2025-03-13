@@ -1,0 +1,19 @@
+Next project we will build a clone of todoist with some of the features
+
+Tasks
+Create, Update, Delete a task
+Each task will have content, description, due date, is_completed, created_at
+
+Project
+CRUD on projects
+Each project will have name, color, is_favorite,
+
+One project will contain multiple tasks. One task can belong to only one project
+Build REST APIs for these two entities
+
+
+Tasks
+- id, content, description, duu_date, is_completed, created_at, project_id
+
+Project
+- id, name, color, is_favorite
