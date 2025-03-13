@@ -1,4 +1,4 @@
-import DB from "../connect.js";
+import { DB } from "../connect.js";
 
 const create = (newTask, result) => {
   let sql = `INSERT INTO tasks (content, description, due_date, is_completed, project_id) VALUES (?, ?, ?, ?, ?)`;

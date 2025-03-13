@@ -10,24 +10,27 @@ const DB = new sq3.Database(
       console.error("Error connecting to the database:", err);
       return;
     }
-    console.log("Connected to SQLite database.");
+    console.log("✅ Connected to SQLite database.");
   }
 );
 
-const runQuery = (sql, params = []) => {
+const runQuery = (sql, table, params = []) => {
   DB.run(sql, params, (err) => {
     if (err) {
       console.error("Error creating table:", err);
       return;
     }
-    console.log("Tutorials table created or already exists.");
+    console.log(`${table} table created or already exists.`);
   });
 };
 
 // Create Tables
 const createTables = async () => {
   try {
-    await Promise.all([runQuery(createProject), runQuery(createTask)]);
+    await Promise.all([
+      runQuery(createProject, "Projects"),
+      runQuery(createTask, "Tasks"),
+    ]);
     console.log("✅ Tables created.");
   } catch (error) {
     console.error("❌ Error creating tables:", error);
