@@ -50,3 +50,5 @@ const remove = (id, result) => {
     result(null, { message: "Task deleted successfully!" });
   });
 };
+
+export { create, update, remove };
