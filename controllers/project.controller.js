@@ -21,7 +21,7 @@ const createProject = (req, res) => {
     if (err) {
       return res.status(500).send({
         message:
-          err.message || "Some error occurred while creating the Tutorial.",
+          err.message || "Some error occurred while creating the Project.",
       });
     }
 
