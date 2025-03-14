@@ -31,7 +31,7 @@ const createProject = (req, res) => {
 
 // Update project
 const updateProject = (req, res) => {
-  let { name, color, is_favorite } = req.body;
+  let { name, color, is_favorite = false } = req.body;
   let projectId = Number(req.params.id);
 
   // Validate project ID
@@ -106,7 +106,7 @@ const findAllProjects = (_, res) => {
 
 // REMOVE PROJECT
 const removeProject = (req, res) => {
-  const projectId = req.params.id;
+  const projectId = Number(req.params.id);
 
   // Validate project ID
   if (!projectId || isNaN(projectId)) {
