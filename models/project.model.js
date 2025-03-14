@@ -71,12 +71,12 @@ const removeAll = (result) => {
   DB.run(sql, [], function (err) {
     if (err) {
       console.error("Error deleting projects:", err);
-      result(err, null);
+      result(err);
       return;
     }
 
     console.log("Deleted all projects");
-    result(null, { message: "All projects deleted successfully!" });
+    result(null);
   });
 };
 

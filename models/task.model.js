@@ -106,4 +106,33 @@ const remove = async (id, result) => {
   }
 };
 
-export { create, update, remove };
+// FIND TASK
+const find = (req, result) => {
+  const allowed = ["project_id", "due_date", "is_completed", "created at"];
+  let values = [];
+  let filters = [];
+
+  allowed.forEach((filter) => {
+    if (req.query[filter] !== undefined) {
+      filters.push(`${filter} = ?`);
+      values.push(req.query[filter]);
+    }
+  });
+
+  let sql = `SELECT * FROM tasks`;
+  if (filters.length > 0) {
+    sql += " WHERE " + filters.join(" AND ");
+  }
+
+  DB.all(sql, values, (err, rows) => {
+    if (err) {
+      result(err);
+      return;
+    }
+
+    result(null, rows);
+    return;
+  });
+};
+
+export { create, update, remove, find };
