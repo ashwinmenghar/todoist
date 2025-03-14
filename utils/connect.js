@@ -1,7 +1,21 @@
 import sqlite3 from "sqlite3";
-import { createProject, createTask } from "./queries.js";
+import {
+  createComment,
+  createProject,
+  createTask,
+  createUser,
+} from "./queries.js";
+
+import fs from "fs/promises";
 
 const sq3 = sqlite3.verbose();
+
+// Remove existing database file
+try {
+  await fs.rm("./database.db", { recursive: true });
+} catch (error) {
+  console.error("❌ Error removing database file:", error);
+}
 
 const DB = new sq3.Database(
   "./todoist.db",
@@ -31,6 +45,8 @@ const createTables = async () => {
     await Promise.all([
       runQuery(createProject, "Projects"),
       runQuery(createTask, "Tasks"),
+      runQuery(createUser, "Users"),
+      runQuery(createComment, "Comments"),
     ]);
     console.log("✅ Tables created.");
   } catch (error) {
