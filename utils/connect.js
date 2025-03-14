@@ -1,7 +1,8 @@
 import sqlite3 from "sqlite3";
-import { createProject, createTask } from "./utils/queries.js";
+import { createProject, createTask } from "./queries.js";
 
 const sq3 = sqlite3.verbose();
+
 const DB = new sq3.Database(
   "./todoist.db",
   sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE,

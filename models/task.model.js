@@ -1,4 +1,4 @@
-import { DB } from "../connect.js";
+import { DB } from "../utils/connect.js";
 
 // CREATE A TASK
 const create = async (newTask, result) => {
