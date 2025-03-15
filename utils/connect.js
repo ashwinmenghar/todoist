@@ -13,7 +13,7 @@ const sq3 = sqlite3.verbose();
 
 // Remove existing database file
 try {
-  await fs.rm("./todoist.db", { recursive: true });
+  // await fs.rm("./todoist.db", { recursive: true });
 } catch (error) {
   console.error("❌ Error removing database file:", error);
 }

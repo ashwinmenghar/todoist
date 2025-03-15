@@ -115,6 +115,9 @@ const find = (req, result) => {
     created_at: { clause: "created_at LIKE ?", transform: (val) => `%${val}%` },
   };
 
+  let page = req.query["page"] ? Number(req.query["page"]) : 1;
+  let limit = 10;
+
   const filters = [];
   const values = [];
 
@@ -125,9 +128,9 @@ const find = (req, result) => {
     }
   });
 
-  const sql = `SELECT * FROM tasks${
+  let sql = `SELECT * FROM tasks${
     filters.length ? " WHERE " + filters.join(" AND ") : ""
-  }`;
+  } LIMIT ${limit} OFFSET ${limit * (page - 1)}`;
 
   DB.all(sql, values, (err, rows) => {
     if (err) return result(err);

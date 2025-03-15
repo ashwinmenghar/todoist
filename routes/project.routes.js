@@ -14,7 +14,7 @@ const router = express.Router();
 router.post("/", createProject);
 
 // Update a project
-router.put("/:id", updateProject);
+router.patch("/:id", updateProject);
 
 // Find a project
 router.get("/:id", findProject);

@@ -1,4 +1,5 @@
 import { DB } from "../utils/connect.js";
+import { sendResponse } from "../utils/helper.js";
 
 // CREATE A PROJECT
 const create = (newproject, result) => {
@@ -22,27 +23,34 @@ const create = (newproject, result) => {
 
 // UPDATE PROJECT USING ID
 const update = (id, project, result) => {
-  let sql = `UPDATE projects SET name = ?, color = ?, is_favorite = ? WHERE id = ?`;
+  console.log(project);
 
-  DB.run(
-    sql,
-    [project.name, project.color, project.is_favorite, id],
-    function (err) {
-      if (err) {
-        console.log("error: ", err);
-        result(err, null);
-        return;
-      }
+  let filters = [];
+  let values = [];
 
-      if (this.changes === 0) {
-        result({ kind: "not_found" }, null);
-        return;
-      }
+  Object.keys(project).forEach((key) => {
+    filters.push(`${key} = ?`);
+    values.push(project[key]);
+  });
 
-      console.log("Project updated: ", { id: id, ...project });
-      result(null, { id: id, ...project });
+  let sql = `UPDATE projects SET ${filters.join(", ")} WHERE id = ?`;
+  // let sql = `UPDATE projects SET name = ?, color = ?, is_favorite = ? WHERE id = ?`;
+
+  DB.run(sql, project, function (err) {
+    if (err) {
+      console.log("error: ", err);
+      result(err, null);
+      return;
     }
-  );
+
+    if (this.changes === 0) {
+      result({ kind: "not_found" }, null);
+      return;
+    }
+
+    console.log("Project updated: ", { id: id, ...project });
+    result(null, { id: id, ...project });
+  });
 };
 
 // DELETE PROJECT USING ID
