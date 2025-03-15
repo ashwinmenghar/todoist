@@ -29,7 +29,6 @@ const createUser = `CREATE TABLE IF NOT EXISTS users (
 const createComment = `CREATE TABLE IF NOT EXISTS comments (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   content VARCHAR(255),
-  email VARCHAR(50) UNIQUE NOT NULL,
   posted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   project_id INTEGER, 
   task_id INTEGER,
