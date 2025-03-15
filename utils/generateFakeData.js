@@ -108,7 +108,7 @@ const generateData = async (userCount, projectCount, taskCount) => {
 
 try {
   let start = performance.now();
-  await generateData(10, 1000000, 10000000);
+  await generateData(10, 100, 100);
 
   console.log(`total time is ${performance.now() - start} ms`);
 } catch (error) {

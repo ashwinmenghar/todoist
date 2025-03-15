@@ -108,30 +108,30 @@ const remove = async (id, result) => {
 
 // FIND TASK
 const find = (req, result) => {
-  const allowed = ["project_id", "due_date", "is_completed", "created at"];
-  let values = [];
-  let filters = [];
+  const filterMap = {
+    project_id: { clause: "project_id = ?", transform: Number },
+    is_completed: { clause: "is_completed = ?", transform: Number },
+    due_date: { clause: "due_date LIKE ?", transform: (val) => `%${val}%` },
+    created_at: { clause: "created_at LIKE ?", transform: (val) => `%${val}%` },
+  };
 
-  allowed.forEach((filter) => {
-    if (req.query[filter] !== undefined) {
-      filters.push(`${filter} = ?`);
-      values.push(req.query[filter]);
+  const filters = [];
+  const values = [];
+
+  Object.entries(filterMap).forEach(([key, { clause, transform }]) => {
+    if (req.query[key] !== undefined) {
+      filters.push(clause);
+      values.push(transform(req.query[key]));
     }
   });
 
-  let sql = `SELECT * FROM tasks`;
-  if (filters.length > 0) {
-    sql += " WHERE " + filters.join(" AND ");
-  }
+  const sql = `SELECT * FROM tasks${
+    filters.length ? " WHERE " + filters.join(" AND ") : ""
+  }`;
 
   DB.all(sql, values, (err, rows) => {
-    if (err) {
-      result(err);
-      return;
-    }
-
+    if (err) return result(err);
     result(null, rows);
-    return;
   });
 };
 
