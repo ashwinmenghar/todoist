@@ -65,13 +65,14 @@ const generateData = async (userCount, projectCount, taskCount) => {
       projects
     );
 
-    const taskBatchSize = 1000000; // Insert 100,000 tasks at a time
+    const taskBatchSize = 100000; // Insert 100,000 tasks at a time
     for (let i = 0; i < taskCount; i += taskBatchSize) {
       let tasks = Array.from(
         { length: Math.min(taskBatchSize, taskCount - i) },
         (_, j) => {
           let createdAt = getRandomCreatedAtLastWeek();
           let dueDate = getDueDate(createdAt);
+
           return [
             (Math.random() + 1).toString(36).substring(3),
             "Description for task " + (i + j + 1),

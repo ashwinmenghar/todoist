@@ -23,8 +23,6 @@ const create = (newproject, result) => {
 
 // UPDATE PROJECT USING ID
 const update = (id, project, result) => {
-  console.log(project);
-
   let filters = [];
   let values = [];
 
