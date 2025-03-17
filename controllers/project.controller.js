@@ -72,7 +72,7 @@ const updateProject = (req, res) => {
       return sendResponse(
         res,
         500,
-        `Error updating Project with id ${projectId}`
+        err.message || `Error updating Project with id ${projectId}`
       );
     }
 
@@ -109,8 +109,8 @@ const findProject = (req, res) => {
 };
 
 // GET ALL PROJECTS
-const findAllProjects = (_, res) => {
-  findAll((err, data) => {
+const findAllProjects = (req, res) => {
+  findAll(req, (err, data) => {
     if (err) {
       return sendResponse(res, 500, "Error occurred while retrieving projects");
     }

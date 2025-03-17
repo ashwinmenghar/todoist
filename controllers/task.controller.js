@@ -35,15 +35,16 @@ const updateTask = (req, res) => {
   const taskId = Number(req.params.id);
 
   // Validate task ID
-  if (!taskId || isNaN(taskId)) {
+  if (!taskId) {
+    return sendResponse(res, 400, "Task id required!");
+  }
+  if (isNaN(taskId)) {
     return sendResponse(res, 400, "Invalid task ID!");
   }
 
-  const { content, project_id } = req.body;
-
-  // Validate required fields
-  if (!content || !project_id) {
-    return sendResponse(res, 400, "Content and project_id are required!");
+  // Validate ID
+  if (Object.keys(req.body).length === 0) {
+    return sendResponse(res, 400, "No fields provided for update!");
   }
 
   update(taskId, req.body, (err, data) => {

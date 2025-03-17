@@ -1,5 +1,5 @@
 import { create, update, remove, findByField } from "../models/user.model.js";
-import { sendResponse } from "../utils/helper.js";
+import { emailValidation, sendResponse } from "../utils/helper.js";
 
 // Create new user
 const createUser = (req, res) => {
@@ -9,6 +9,10 @@ const createUser = (req, res) => {
   }
 
   const { name, email } = req.body;
+
+  if (!emailValidation(email)) {
+    return sendResponse(res, 400, `Invalid email ${email}`);
+  }
 
   if (findByField("email", email)) {
     return sendResponse(res, 400, `User with email ${email} already exists!`);
@@ -40,6 +44,10 @@ const updateUser = (req, res) => {
 
   if (!name) {
     return sendResponse(res, 400, "User's name is required");
+  }
+
+  if (!emailValidation(email)) {
+    return sendResponse(res, 400, `Invalid email ${email}`);
   }
 
   // Check if the email exists for another user

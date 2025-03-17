@@ -34,7 +34,7 @@ const update = (id, project, result) => {
   let sql = `UPDATE projects SET ${filters.join(", ")} WHERE id = ?`;
   // let sql = `UPDATE projects SET name = ?, color = ?, is_favorite = ? WHERE id = ?`;
 
-  DB.run(sql, project, function (err) {
+  DB.run(sql, [values, id], function (err, data) {
     if (err) {
       console.log("error: ", err);
       result(err, null);
@@ -54,6 +54,7 @@ const update = (id, project, result) => {
 // DELETE PROJECT USING ID
 const remove = (id, result) => {
   let sql = `DELETE FROM projects WHERE id = ?`;
+
   DB.run(sql, [id], function (err) {
     if (err) {
       console.error("Error deleting project:", err);
@@ -108,8 +109,13 @@ const findById = (id, result) => {
 };
 
 // GET ALL PROJECTS
-const findAll = (result) => {
-  let sql = `SELECT * FROM projects`;
+const findAll = (req, result) => {
+  let page = req.query["page"] ? Number(req.query["page"]) : 1;
+  let limit = 1000;
+
+  let sql = `SELECT * FROM projects  LIMIT ${limit} OFFSET ${
+    limit * (page - 1)
+  }`;
 
   DB.all(sql, [], (err, res) => {
     if (err) {

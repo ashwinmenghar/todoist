@@ -34,9 +34,8 @@ const update = (commentId, newComment, result) => {
   }
 
   let sql = `UPDATE comments SET ${fields.join(", ")} WHERE id = ?`;
-  values.push(commentId);
 
-  DB.run(sql, values, function (err) {
+  DB.run(sql, [...values, commentId], function (err) {
     if (err) {
       result(err);
       return;
@@ -85,7 +84,7 @@ const find = (req, result) => {
 // Delete comment
 const remove = (commentId, result) => {
   let sql = "DELETE FROM comments WHERE id = ?";
-  
+
   DB.run(sql, [commentId], function (err) {
     if (err) {
       result(err);

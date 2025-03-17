@@ -36,44 +36,29 @@ const create = async (newTask, result) => {
 // UPDATE TASK USING ID
 const update = async (id, task, result) => {
   try {
-    // Validate ID
-    if (!id || isNaN(Number(id))) {
-      return result({ message: "Invalid task ID!" }, null);
+    let fields = [];
+    let values = [];
+
+    for (const [key, value] of Object.entries(task)) {
+      fields.push(`${key} = ?`);
+      values.push(value);
     }
 
-    const {
-      content,
-      description,
-      due_date = null,
-      is_completed = false,
-      project_id,
-    } = task;
+    let sql = `UPDATE tasks SET ${fields.join(", ")} WHERE id = ?`;
+    values.push(id);
 
-    // Ensure `is_completed` is either false or true
-    if (![false, true].includes(is_completed)) {
-      return result({ message: "is_completed must be boolean!" }, null);
-    }
-
-    // SQL Update Query (PUT requires all fields)
-    const sql = `UPDATE tasks SET content = ?, description = ?, due_date = ?, is_completed = ?, project_id = ? WHERE id = ?`;
-
-    DB.run(
-      sql,
-      [content, description, due_date || null, is_completed, project_id, id],
-      function (err) {
-        if (err) {
-          console.error("Error updating task:", err);
-          result(err, null);
-          return;
-        }
-        if (this.changes === 0) {
-          return result({ kind: "not_found" }, null);
-        }
-
-        console.log("Task updated:", { id, ...task });
-        result(null, { id, ...task });
+    DB.run(sql, values, function (err) {
+      if (err) {
+        console.error("Error updating task:", err);
+        return result(err, null);
       }
-    );
+      if (this.changes === 0) {
+        return result({ kind: "not_found" }, null);
+      }
+
+      console.log("Task updated:", { id, ...task });
+      result(null, { id, ...task });
+    });
   } catch (error) {
     console.error("Unexpected error in update:", error);
     result(error, null);
@@ -110,13 +95,16 @@ const remove = async (id, result) => {
 const find = (req, result) => {
   const filterMap = {
     project_id: { clause: "project_id = ?", transform: Number },
-    is_completed: { clause: "is_completed = ?", transform: Number },
+    is_completed: {
+      clause: "is_completed = ?",
+      transform: (val) => (val == true ? 1 : 0),
+    },
     due_date: { clause: "due_date LIKE ?", transform: (val) => `%${val}%` },
     created_at: { clause: "created_at LIKE ?", transform: (val) => `%${val}%` },
   };
 
   let page = req.query["page"] ? Number(req.query["page"]) : 1;
-  let limit = 10;
+  let limit = 1000;
 
   const filters = [];
   const values = [];

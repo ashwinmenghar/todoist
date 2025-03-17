@@ -33,7 +33,7 @@ const createComment = (req, res) => {
 
 // Update comment by ID
 const updateComment = (req, res) => {
-  const commentId = req.params.id;
+  const commentId = Number(req.params.id);
 
   // Validate comment ID
   if (!commentId) {
@@ -66,7 +66,7 @@ const updateComment = (req, res) => {
   });
 };
 
-// Get commnet by ID
+// Get comment by ID
 const findComment = (req, res) => {
   const taskId =
     req.query.task_id !== undefined ? Number(req.query.task_id) : null;
