@@ -1,8 +1,8 @@
 import express from "express";
 import {
   createUser,
-  deleteUser,
-  updateUser,
+  // deleteUser,
+  // updateUser,
 } from "../controllers/user.controller.js";
 
 const router = express.Router();
@@ -11,7 +11,9 @@ const router = express.Router();
 router.post("/", createUser);
 
 // Update user
-router.put("/:id", updateUser);
+// router.put("/:id", updateUser);
 
-// Delete user
-router.delete("/:id", deleteUser);
+// // Delete user
+// router.delete("/:id", deleteUser);
+
+export default router;

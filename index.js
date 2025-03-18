@@ -2,6 +2,7 @@ import express from "express";
 import projectRoutes from "./routes/project.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
+import usersRoutes from "./routes/user.routes.js";
 
 const app = express();
 const PORT = 8000;
@@ -19,6 +20,9 @@ app.use("/api/v1/task", taskRoutes);
 
 // Comments routes
 app.use("/api/v1/comment", commentRoutes);
+
+// Users routes
+app.use("/api/v1/user", usersRoutes);
 
 // Listen
 app.listen(PORT, () => console.log(`server running on PORT: ${PORT}`));

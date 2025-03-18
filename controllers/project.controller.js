@@ -5,38 +5,40 @@ import {
   remove,
   removeAll,
   update,
-} from "../models/project.model.js";
+} from "../models/orm/project.model.js";
 import { sendResponse } from "../utils/helper.js";
 
 // Create a new project
-const createProject = (req, res) => {
-  let { name, color, is_favorite = false } = req.body;
+const createProject = async (req, res) => {
+  let { name, color, is_favorite = 0 } = req.body;
 
   // Validate required fields
   if (!name || !color) {
     return sendResponse(res, 400, "Name and color are required!");
   }
 
-  // Store project
-  create({ name, color, is_favorite }, (err, data) => {
-    if (err) {
-      return sendResponse(
-        res,
-        500,
-        err.message || "Some error occurred while creating the Project."
-      );
-    }
+  if (is_favorite !== undefined) {
+    is_favorite = is_favorite == true ? 1 : 0;
+  }
 
+  try {
+    // Store project
+    let data = await create({ name, color, is_favorite });
     return sendResponse(res, 200, {
       message: "Project created successfully!",
       data,
     });
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || "Some error occurred while creating the Project."
+    );
+  }
 };
 
 // Update project
-const updateProject = (req, res) => {
-  // let { name, color, is_favorite = false } = req.body;
+const updateProject = async (req, res) => {
   let projectId = Number(req.params.id);
 
   // Validate for project data
@@ -44,47 +46,23 @@ const updateProject = (req, res) => {
     return sendResponse(res, 400, "Project data cannot be empty");
   }
 
-  // Validate project ID
-  // if (!projectId || isNaN(projectId)) {
-  //   return sendResponse(res, 400, "Invalid project id");
-  // }
-
-  // // Validate required fields
-  // if (!name || !color) {
-  //   return sendResponse(res, 400, "Name and color are required!");
-  // }
-
-  // // Ensure `is_favorite` is either true or false
-  // if (is_favorite !== undefined && ![false, true].includes(is_favorite)) {
-  //   return sendResponse(res, 400, "is_favorite must be boolean!");
-  // }
-
-  update(projectId, req.body, function (err, data) {
-    if (err) {
-      if (err.kind === "not_found") {
-        return sendResponse(
-          res,
-          404,
-          `Not found Project with id ${projectId}.`
-        );
-      }
-
-      return sendResponse(
-        res,
-        500,
-        err.message || `Error updating Project with id ${projectId}`
-      );
-    }
-
+  try {
+    let data = await update(projectId, req.body);
     return sendResponse(res, 200, {
       message: "Project updated successfully!",
       data,
     });
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || `Error updating Project with id ${projectId}`
+    );
+  }
 };
 
 // Get specific project by id
-const findProject = (req, res) => {
+const findProject = async (req, res) => {
   const projectId = Number(req.params.id);
 
   // Validate project ID
@@ -92,35 +70,36 @@ const findProject = (req, res) => {
     return sendResponse(res, 400, { message: "Invalid project id" });
   }
 
-  findById(projectId, (err, data) => {
-    if (err) {
-      if (err.kind === "not_found") {
-        return sendResponse(res, 404, {
-          message: `Not found Project with id ${projectId}.`,
-        });
-      }
-      return sendResponse(res, 500, {
-        message: `Error retrieving project with id ${projectId}`,
-      });
-    }
+  try {
+    let data = await findById(projectId);
+    console.log(data);
 
     return sendResponse(res, 200, data);
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || `Error retrieving project with id ${projectId}`
+    );
+  }
 };
 
 // GET ALL PROJECTS
-const findAllProjects = (req, res) => {
-  findAll(req, (err, data) => {
-    if (err) {
-      return sendResponse(res, 500, "Error occurred while retrieving projects");
-    }
-
+const findAllProjects = async (req, res) => {
+  try {
+    let data = await findAll(req);
     return sendResponse(res, 200, data);
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || "Error occurred while retrieving projects"
+    );
+  }
 };
 
 // REMOVE PROJECT
-const removeProject = (req, res) => {
+const removeProject = async (req, res) => {
   const projectId = Number(req.params.id);
 
   // Validate project ID
@@ -128,31 +107,26 @@ const removeProject = (req, res) => {
     return sendResponse(res, 400, "Invalid project id");
   }
 
-  remove(projectId, (err) => {
-    if (err) {
-      if (err.kind === "not_found") {
-        return sendResponse(res, 404, `Not found project with id ${projectId}`);
-      }
-      return sendResponse(
-        res,
-        500,
-        `Could not delete project with id ${projectId}`
-      );
-    }
-
+  try {
+    await remove(projectId);
     return sendResponse(res, 200, "Project delete successfully");
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || `Could not delete project with id ${projectId}`
+    );
+  }
 };
 
 // REMOVE ALL PROJECTS
-const removeAllProject = (_, res) => {
-  removeAll((err) => {
-    if (err) {
-      return sendResponse(res, 500, "Error while deleting projects");
-    }
-
+const removeAllProject = async (_, res) => {
+  try {
+    await removeAll();
     return sendResponse(res, 200, "All projects deleted successfully!");
-  });
+  } catch (error) {
+    return sendResponse(res, 500, "Error while deleting projects");
+  }
 };
 
 export {

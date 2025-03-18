@@ -1,0 +1,7 @@
+{
+    "schema": "./schema/schema.js",
+    "driver": "better-sqlite3",
+    "dbCredentials": {
+        "url": "sqlite://./todoist.db"
+    }
+}
