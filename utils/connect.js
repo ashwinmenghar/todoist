@@ -46,11 +46,50 @@ const createTables = async () => {
   }
 };
 
-// Enable foreign key constraints
-DB.run("PRAGMA foreign_keys = ON;");
+// Create Indexes
+const createIndexes = async () => {
+  try {
+    await Promise.all([
+      runQuery(
+        "CREATE INDEX IF NOT EXISTS idx_task_project ON tasks (project_id);",
+        DB
+      ),
+      runQuery(
+        "CREATE INDEX IF NOT EXISTS idx_task_due_date ON tasks (due_date);",
+        DB
+      ),
+      runQuery(
+        "CREATE INDEX IF NOT EXISTS idx_task_completed ON tasks (is_completed);",
+        DB
+      ),
+      runQuery(
+        "CREATE INDEX IF NOT EXISTS idx_comment_task ON comments (task_id);",
+        DB
+      ),
+      runQuery(
+        "CREATE INDEX IF NOT EXISTS idx_comment_project ON comments (project_id);",
+        DB
+      ),
+    ]);
+    console.log("✅ Indexes created.");
+  } catch (error) {
+    console.error("❌ Error creating indexes:", error);
+    process.exit(1);
+  }
+};
+
+// Enable foreign key constraints & optimizations
+DB.serialize(() => {
+  DB.run("PRAGMA journal_mode = WAL;"); // Improves write performance
+  DB.run("PRAGMA synchronous = NORMAL;"); // Reduces sync overhead
+  DB.run("PRAGMA temp_store = MEMORY;"); // Speeds up temp tables
+  DB.run("PRAGMA cache_size = 100000;"); // Increases cache for better performance
+  DB.run("PRAGMA foreign_keys = ON;"); // Ensure FK constraints are enabled
+});
 
 try {
   await createTables();
+  await createIndexes(); // 🔹 Call the function after table creation
 } catch (error) {
   console.error(error.message);
 }

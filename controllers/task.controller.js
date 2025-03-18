@@ -1,9 +1,18 @@
-import { create, remove, update, find } from "../models/task.model.js";
+import { create, remove, update, find } from "../models/orm/task.model.js";
 import { sendResponse } from "../utils/helper.js";
 
 // Create a task
-const createTask = (req, res) => {
-  const { content, project_id } = req.body;
+const createTask = async (req, res) => {
+  let {
+    content,
+    description,
+    due_date = null,
+    is_completed = 0,
+    project_id,
+  } = req.body;
+
+  // Ensure is_completed is either 0 or 1
+  is_completed = is_completed === true ? 1 : 0;
 
   // Validate required fields
   if (!content || !project_id) {
@@ -14,24 +23,30 @@ const createTask = (req, res) => {
     return sendResponse(res, 400, "Invalid project_id format!");
   }
 
-  create(req.body, (err, data) => {
-    if (err) {
-      return sendResponse(
-        res,
-        500,
-        err.message || "Some error occurred while creating the Task."
-      );
-    }
+  try {
+    const data = await create({
+      content,
+      description,
+      due_date,
+      is_completed,
+      project_id,
+    });
 
     return sendResponse(res, 201, {
       message: "Task created successfully",
       data,
     });
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || "Some error occurred while creating the Task."
+    );
+  }
 };
 
 // Update a task
-const updateTask = (req, res) => {
+const updateTask = async (req, res) => {
   const taskId = Number(req.params.id);
 
   // Validate task ID
@@ -47,28 +62,23 @@ const updateTask = (req, res) => {
     return sendResponse(res, 400, "No fields provided for update!");
   }
 
-  update(taskId, req.body, (err, data) => {
-    if (err) {
-      if (err.kind === "not_found") {
-        return sendResponse(res, 404, `Task with ID ${taskId} not found.`);
-      }
-
-      return sendResponse(
-        res,
-        500,
-        err.message || `Error updating task with ID ${taskId}.`
-      );
-    }
-
+  try {
+    const data = await update(taskId, req.body);
     return sendResponse(res, 200, {
       message: "Task updated successfully",
       data,
     });
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || `Error updating task with ID ${taskId}.`
+    );
+  }
 };
 
 // Remove a task
-const removeTask = (req, res) => {
+const removeTask = async (req, res) => {
   const taskId = Number(req.params.id);
 
   // Validate task ID
@@ -76,32 +86,26 @@ const removeTask = (req, res) => {
     return sendResponse(res, 400, "Invalid task ID!");
   }
 
-  remove(taskId, (err) => {
-    if (err) {
-      if (err.kind === "not_found") {
-        return sendResponse(res, 404, `Task with ID ${taskId} not found.`);
-      }
-
-      return sendResponse(
-        res,
-        500,
-        err.message || `Error deleting task with ID ${taskId}.`
-      );
-    }
-
+  try {
+    await remove(taskId);
     return sendResponse(res, 200, "Task deleted successfully!");
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || `Error deleting task with ID ${taskId}.`
+    );
+  }
 };
 
 // Find tasks
-const findTask = (req, res) => {
-  find(req, (err, data) => {
-    if (err) {
-      return sendResponse(res, 500, "Error finding task");
-    }
-
+const findTask = async (req, res) => {
+  try {
+    const data = await find(req);
     return sendResponse(res, 200, data);
-  });
+  } catch (error) {
+    return sendResponse(res, 500, "Error finding task");
+  }
 };
 
 export { createTask, updateTask, removeTask, findTask };

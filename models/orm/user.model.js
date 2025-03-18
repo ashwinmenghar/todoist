@@ -4,7 +4,7 @@ import { users } from "../../schema/schema.js";
 // Insert a new user
 const create = async (newUser, result) => {
   try {
-    const res = await db.insert(users).values(newUser);
+    const res = await db.insert(users).values(newUser) ;
     result(null, { id: res.lastInsertRowid, newUser });
   } catch (error) {
     console.log("error", error.message);

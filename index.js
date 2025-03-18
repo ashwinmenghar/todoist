@@ -3,7 +3,9 @@ import projectRoutes from "./routes/project.routes.js";
 import taskRoutes from "./routes/task.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
 import usersRoutes from "./routes/user.routes.js";
+import { DB } from "./utils/connect.js";
 
+DB;
 const app = express();
 const PORT = 8000;
 
