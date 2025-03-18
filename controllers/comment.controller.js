@@ -1,8 +1,8 @@
-import { create, find, remove, update } from "../models/comment.model.js";
+import { create, find, remove, update } from "../models/orm/comment.model.js";
 import { sendResponse } from "../utils/helper.js";
 
 // Create new comment
-const createComment = (req, res) => {
+const createComment = async (req, res) => {
   const { project_id = null, task_id = null, content } = req.body;
 
   // Validate project ID and task ID
@@ -15,24 +15,23 @@ const createComment = (req, res) => {
     return sendResponse(res, 400, "Comment content is required!");
   }
 
-  create({ project_id, task_id, content }, (err, data) => {
-    if (err) {
-      return sendResponse(
-        res,
-        500,
-        err.message || "Some error occurred while creating the Project."
-      );
-    }
-
+  try {
+    let data = await create({ project_id, task_id, content });
     return sendResponse(res, 200, {
       message: "Comment created successfully",
       data,
     });
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || "Some error occurred while creating the Project."
+    );
+  }
 };
 
 // Update comment by ID
-const updateComment = (req, res) => {
+const updateComment = async (req, res) => {
   const commentId = Number(req.params.id);
 
   // Validate comment ID
@@ -45,29 +44,20 @@ const updateComment = (req, res) => {
     return sendResponse(res, 400, "Comment data cannot be empty");
   }
 
-  update(commentId, req.body, (err, data) => {
-    if (err) {
-      if (err.kind === "not_found") {
-        return sendResponse(
-          res,
-          404,
-          `Not found comment with id ${commentId}!`
-        );
-      }
-
-      return sendResponse(
-        res,
-        500,
-        err.message || `Error updating comment with id ${commentId}!`
-      );
-    }
-
+  try {
+    await update(commentId, req.body);
     return sendResponse(res, 200, "Comment update successfully");
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || `Error updating comment with id ${commentId}!`
+    );
+  }
 };
 
 // Get comment by ID
-const findComment = (req, res) => {
+const findComment = async (req, res) => {
   const taskId =
     req.query.task_id !== undefined ? Number(req.query.task_id) : null;
   const projectId =
@@ -88,38 +78,32 @@ const findComment = (req, res) => {
       .send({ message: "Task ID or Project ID is required!" });
   }
 
-  find(req, (err, data) => {
-    if (err) {
-      return sendResponse(res, 500, err.message || "Error in finding comments");
-    }
-
+  try {
+    const data = await find(req.query);
     return sendResponse(res, 200, data);
-  });
+  } catch (error) {
+    return sendResponse(res, 500, error.message || "Error in finding comments");
+  }
 };
 
 // Delete comment by ID
-const deleteComment = (req, res) => {
+const deleteComment = async (req, res) => {
   const commentId = Number(req.params.id);
 
   if (isNaN(commentId)) {
     return sendResponse(res, 400, "Invalid CommentId format!");
   }
 
-  remove(commentId, (err) => {
-    if (err) {
-      if (err.kind === "not_found") {
-        return sendResponse(res, 404, `Not found comment with id ${commentId}`);
-      }
-
-      return sendResponse(
-        res,
-        500,
-        err.message || `Error deleting comment with id ${commentId}`
-      );
-    }
-
+  try {
+    await remove(commentId);
     return sendResponse(res, 200, "Comment deleted successfully");
-  });
+  } catch (error) {
+    return sendResponse(
+      res,
+      500,
+      error.message || `Error deleting comment with id ${commentId}`
+    );
+  }
 };
 
 export { createComment, updateComment, findComment, deleteComment };

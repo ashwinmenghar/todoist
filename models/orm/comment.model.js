@@ -1,95 +1,79 @@
+import { and, eq, or } from "drizzle-orm";
 import db from "../../config/db.js";
 import { comments } from "../../schema/schema.js";
-import { DB } from "../utils/connect.js";
 
 // CREATE NEW COMMENTS
-const create = async (newComment, result) => {
+const create = async (newComment) => {
   try {
     await db.insert(comments).values(newComment);
     console.log("Comment created successfully");
-  } catch (error) {}
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 // UPDATE COMMENT
-const update = (commentId, newComment, result) => {
-  let fields = [];
-  let values = [];
+const update = async (commentId, newComment) => {
+  try {
+    let commentResponse = await db
+      .update(comments)
+      .set(newComment)
+      .where(eq(commentId, comments.id));
 
-  for (const [key, value] of Object.entries(newComment)) {
-    fields.push(`${key} = ?`);
-    values.push(value);
-  }
-
-  if (fields.length === 0) {
-    return result({ message: "No fields provided for update" });
-  }
-
-  let sql = `UPDATE comments SET ${fields.join(", ")} WHERE id = ?`;
-
-  DB.run(sql, [...values, commentId], function (err) {
-    if (err) {
-      result(err);
-      return;
+    if (commentResponse.changes === 0) {
+      throw new Error(
+        `Comment with ID ${commentId} not found or no changes made`
+      );
     }
 
-    if (this.changes === 0) {
-      result({ kind: "not_found" });
-      return;
-    }
-
-    console.log("Comment updated successfully", newComment);
-    result(null, newComment);
-  });
+    console.log("Comment update successfully");
+    return commentResponse;
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 // GET COMMENT
-const find = (req, result) => {
-  const { task_id, project_id } = req.query;
+const find = async (queries) => {
+  const { task_id, project_id } = queries;
+  let conditions = [];
 
-  let queries = [];
-  let values = [];
-
-  if (task_id) {
-    queries.push(`task_id = ?`);
-    values.push(Number(task_id));
+  if (task_id !== undefined) {
+    conditions.push(eq(comments.task_id, Number(task_id)));
   }
 
-  if (project_id) {
-    queries.push(`project_id = ?`);
-    values.push(Number(project_id));
+  if (project_id !== undefined) {
+    conditions.push(eq(comments.project_id, Number(project_id)));
   }
 
-  let sql = `SELECT * FROM comments 
-    ${queries.length > 0 ? " WHERE " + queries.join(" AND ") : ""}
-  `;
-
-  DB.all(sql, values, function (err, data) {
-    if (err) {
-      return result(err);
-    }
-
-    return result(null, data);
-  });
+  try {
+    return await db
+      .select()
+      .from(comments)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 // Delete comment
-const remove = (commentId, result) => {
-  let sql = "DELETE FROM comments WHERE id = ?";
+const remove = async (commentId, result) => {
+  try {
+    const commentResponse = await db
+      .delete(comments)
+      .where(eq(commentId, comments.id));
 
-  DB.run(sql, [commentId], function (err) {
-    if (err) {
-      result(err);
-      return;
+    if (commentResponse.changes === 0) {
+      throw new Error(
+        `Project with ID ${commentId} not found or no changes made`
+      );
     }
 
-    if (this.changes === 0) {
-      result({ kind: "not_found" });
-      return;
-    }
-
-    result(null);
-    return;
-  });
+    console.log("Comment deleted successfully");
+    return commentResponse;
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 export { create, update, remove, find };

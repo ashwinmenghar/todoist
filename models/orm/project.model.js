@@ -16,15 +16,24 @@ const create = async (newproject) => {
 };
 
 // UPDATE PROJECT USING ID
-const update = async (id, projectData) => {
+const update = async (projectId, projectData) => {
   if (projectData.is_favorite !== undefined) {
     projectData.is_favorite = projectData.is_favorite === true ? 1 : 0;
   }
 
   try {
-    await db.update(projects).set(projectData).where(eq(id, projects.id));
-    console.log("Project info updated!");
+    const projectReponse = await db
+      .update(projects)
+      .set(projectData)
+      .where(eq(projectId, projects.id));
 
+    if (projectReponse.changes === 0) {
+      throw new Error(
+        `Comment with ID ${projectId} not found or no changes made`
+      );
+    }
+
+    console.log("Project info updated!");
     return projectData;
   } catch (error) {
     throw new Error(error);
@@ -34,7 +43,13 @@ const update = async (id, projectData) => {
 // // DELETE PROJECT USING ID
 const remove = async (id) => {
   try {
-    return await db.delete(projects).where(eq(id, projects.id));
+    let projectReponse = await db.delete(projects).where(eq(id, projects.id));
+
+    if (projectReponse.changes === 0) {
+      throw new Error(`Project with ID ${id} not found or no changes made`);
+    }
+
+    return projectReponse;
   } catch (error) {
     throw new Error(error);
   }
