@@ -1,4 +1,4 @@
-import { create, find, remove, update } from "../models/orm/comment.model.js";
+import { create, find, remove, update } from "../models/comment.model.js";
 import { sendResponse } from "../utils/helper.js";
 
 // Create new comment

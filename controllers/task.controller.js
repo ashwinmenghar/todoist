@@ -1,4 +1,4 @@
-import { create, remove, update, find } from "../models/orm/task.model.js";
+import { create, remove, update, find } from "../models/task.model.js";
 import { sendResponse } from "../utils/helper.js";
 
 // Create a task

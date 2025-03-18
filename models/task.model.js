@@ -1,129 +1,91 @@
-import { DB } from "../utils/connect.js";
+import { and, eq, like } from "drizzle-orm";
+import db from "../config/db.js";
+import { tasks } from "../schema/schema.js";
 
 // CREATE A TASK
-const create = async (newTask, result) => {
+const create = async (newTask) => {
+  console.log(newTask);
+
   try {
-    const sql = `INSERT INTO tasks (content, description, due_date, is_completed, project_id) VALUES (?, ?, ?, ?, ?)`;
-
-    const {
-      content,
-      description,
-      due_date = null,
-      is_completed = false,
-      project_id,
-    } = newTask;
-
-    DB.run(
-      sql,
-      [content, description, due_date, is_completed, Number(project_id)],
-      function (err) {
-        if (err) {
-          console.error("Error creating task:", err);
-          result(err, null);
-          return;
-        }
-
-        console.log("Task created:", { id: this.lastID, ...newTask });
-        result(null, { id: this.lastID, ...newTask });
-      }
-    );
+    const taskResponse = await db.insert(tasks).values(newTask);
+    console.log("Task created successfully");
+    return { id: taskResponse.lastInsertRowid, ...newTask };
   } catch (error) {
-    console.error("Unexpected error in create:", error);
-    result(error, null);
+    throw new Error(error);
   }
 };
 
 // UPDATE TASK USING ID
-const update = async (id, task, result) => {
+const update = async (taskId, taskData) => {
   try {
-    let fields = [];
-    let values = [];
+    const taskResponse = await db
+      .update(tasks)
+      .set(taskData)
+      .where(eq(taskId, tasks.id));
 
-    for (const [key, value] of Object.entries(task)) {
-      fields.push(`${key} = ?`);
-      values.push(value);
+    if (taskResponse.changes === 0) {
+      throw new Error(`Task with ID ${taskId} not found or no changes made`);
     }
 
-    let sql = `UPDATE tasks SET ${fields.join(", ")} WHERE id = ?`;
-    values.push(id);
-
-    DB.run(sql, values, function (err) {
-      if (err) {
-        console.error("Error updating task:", err);
-        return result(err, null);
-      }
-      if (this.changes === 0) {
-        return result({ kind: "not_found" }, null);
-      }
-
-      console.log("Task updated:", { id, ...task });
-      result(null, { id, ...task });
-    });
+    console.log("Task updated successfully");
+    return { id: taskId, ...taskData };
   } catch (error) {
-    console.error("Unexpected error in update:", error);
-    result(error, null);
+    throw new Error(error);
   }
 };
 
 // DELETE TASK USING ID
-const remove = async (id, result) => {
+const remove = async (taskId) => {
   try {
-    const sql = `DELETE FROM tasks WHERE id = ?`;
+    const taskResponse = await db.delete(tasks).where(eq(taskId, tasks.id));
+    if (taskResponse.changes === 0) {
+      throw new Error(`Task with ID ${taskId} not found or no changes made`);
+    }
 
-    DB.run(sql, [id], function (err) {
-      if (err) {
-        console.error("Error deleting task:", err);
-        result(err, null);
-        return;
-      }
-
-      if (this.changes === 0) {
-        result({ kind: "not_found" }, null);
-        return;
-      }
-
-      console.log("Deleted task with id:", id);
-      result(null, { message: "Task deleted successfully!" });
-    });
+    console.log("Task removed successfully");
+    return taskResponse;
   } catch (error) {
-    console.error("Unexpected error in remove:", error);
-    result(error, null);
+    throw new Error(error);
   }
 };
 
 // FIND TASK
-const find = (req, result) => {
+const find = async (req) => {
   const filterMap = {
-    project_id: { clause: "project_id = ?", transform: Number },
-    is_completed: {
-      clause: "is_completed = ?",
-      transform: (val) => (val == true ? 1 : 0),
+    project_id: {
+      clause: (val) => eq(tasks.project_id, Number(val)),
     },
-    due_date: { clause: "due_date LIKE ?", transform: (val) => `%${val}%` },
-    created_at: { clause: "created_at LIKE ?", transform: (val) => `%${val}%` },
+    is_completed: {
+      clause: (val) => eq(tasks.is_completed, Number(val)),
+    },
+    due_date: {
+      clause: (val) => like(tasks.due_date, `${val}%`),
+    },
+    created_at: {
+      clause: (val) => like(tasks.created_at, `${val}%`),
+    },
   };
 
-  let page = req.query["page"] ? Number(req.query["page"]) : 1;
-  let limit = 1000;
+  let page = Number(req.query["page"]) || 1;
+  let limit = 10;
 
-  const filters = [];
-  const values = [];
-
-  Object.entries(filterMap).forEach(([key, { clause, transform }]) => {
+  const conditions = [];
+  Object.entries(filterMap).forEach(([key, { clause }]) => {
     if (req.query[key] !== undefined) {
-      filters.push(clause);
-      values.push(transform(req.query[key]));
+      conditions.push(clause(req.query[key]));
     }
   });
 
-  let sql = `SELECT * FROM tasks${
-    filters.length ? " WHERE " + filters.join(" AND ") : ""
-  } LIMIT ${limit} OFFSET ${limit * (page - 1)}`;
-
-  DB.all(sql, values, (err, rows) => {
-    if (err) return result(err);
-    result(null, rows);
-  });
+  try {
+    return await db
+      .select()
+      .from(tasks)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .limit(limit)
+      .offset((page - 1) * limit);
+  } catch (error) {
+    throw new Error(error.message);
+  }
 };
 
 export { create, update, remove, find };

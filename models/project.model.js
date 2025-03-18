@@ -1,132 +1,92 @@
-import { DB } from "../utils/connect.js";
-import { sendResponse } from "../utils/helper.js";
+// import { DB } from "../utils/connect.js";
+import { eq } from "drizzle-orm";
+import db from "../config/db.js";
+import { projects } from "../schema/schema.js";
 
 // CREATE A PROJECT
-const create = (newproject, result) => {
-  let sql = `INSERT INTO projects (name, color, is_favorite) VALUES (?, ?, ?)`;
+const create = async (newproject) => {
+  try {
+    const res = await db.insert(projects).values(newproject);
 
-  DB.run(
-    sql,
-    [newproject.name, newproject.color, newproject.is_favorite],
-    function (err) {
-      if (err) {
-        console.log("error: ", err);
-        result(err, null);
-        return;
-      }
-
-      console.log("Project created: ", { id: this.lastID, ...newproject });
-      result(null, { id: this.lastID, ...newproject });
-    }
-  );
+    console.log("New project created!");
+    return { id: res.lastInsertRowid, data: newproject };
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 // UPDATE PROJECT USING ID
-const update = (id, project, result) => {
-  let filters = [];
-  let values = [];
+const update = async (projectId, projectData) => {
+  if (projectData.is_favorite !== undefined) {
+    projectData.is_favorite = projectData.is_favorite === true ? 1 : 0;
+  }
 
-  Object.keys(project).forEach((key) => {
-    filters.push(`${key} = ?`);
-    values.push(project[key]);
-  });
+  try {
+    const projectReponse = await db
+      .update(projects)
+      .set(projectData)
+      .where(eq(projectId, projects.id));
 
-  let sql = `UPDATE projects SET ${filters.join(", ")} WHERE id = ?`;
-  // let sql = `UPDATE projects SET name = ?, color = ?, is_favorite = ? WHERE id = ?`;
-
-  DB.run(sql, [values, id], function (err, data) {
-    if (err) {
-      console.log("error: ", err);
-      result(err, null);
-      return;
+    if (projectReponse.changes === 0) {
+      throw new Error(
+        `Comment with ID ${projectId} not found or no changes made`
+      );
     }
 
-    if (this.changes === 0) {
-      result({ kind: "not_found" }, null);
-      return;
-    }
-
-    console.log("Project updated: ", { id: id, ...project });
-    result(null, { id: id, ...project });
-  });
+    console.log("Project info updated!");
+    return projectData;
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
-// DELETE PROJECT USING ID
-const remove = (id, result) => {
-  let sql = `DELETE FROM projects WHERE id = ?`;
+// // DELETE PROJECT USING ID
+const remove = async (id) => {
+  try {
+    let projectReponse = await db.delete(projects).where(eq(id, projects.id));
 
-  DB.run(sql, [id], function (err) {
-    if (err) {
-      console.error("Error deleting project:", err);
-      result(err, null);
-      return;
+    if (projectReponse.changes === 0) {
+      throw new Error(`Project with ID ${id} not found or no changes made`);
     }
 
-    if (this.changes === 0) {
-      result({ kind: "not_found" }, null);
-      return;
-    }
-
-    console.log("Deleted project with id:", id);
-    result(null, { message: "Project deleted successfully!" });
-  });
+    return projectReponse;
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
-// REMOVE ALL PROEJECTS
-const removeAll = (result) => {
-  let sql = `DELETE FROM projects`;
-  DB.run(sql, [], function (err) {
-    if (err) {
-      console.error("Error deleting projects:", err);
-      result(err);
-      return;
-    }
-
-    console.log("Deleted all projects");
-    result(null);
-  });
+// // REMOVE ALL PROEJECTS
+const removeAll = async () => {
+  try {
+    return await db.delete(projects);
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
-// GET A PROJECT BY ID
-const findById = (id, result) => {
-  let sql = `SELECT id, name, color, is_favorite FROM projects WHERE id = ?`;
-
-  DB.get(sql, [id], function (err, res) {
-    if (err) {
-      console.log("Error ", err);
-      result(err, null);
-      return;
-    }
-
-    if (res) {
-      console.log("found project: ", res);
-      result(null, res);
-      return;
-    }
-
-    result({ kind: "not_found" }, null);
-  });
+// // GET A PROJECT BY ID
+const findById = async (id) => {
+  try {
+    return await db.select().from(projects).where(eq(id, projects.id));
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
-// GET ALL PROJECTS
-const findAll = (req, result) => {
+// // GET ALL PROJECTS
+const findAll = async (req) => {
   let page = req.query["page"] ? Number(req.query["page"]) : 1;
   let limit = 1000;
 
-  let sql = `SELECT * FROM projects  LIMIT ${limit} OFFSET ${
-    limit * (page - 1)
-  }`;
-
-  DB.all(sql, [], (err, res) => {
-    if (err) {
-      console.log("error: ", err);
-      result(err, null);
-      return;
-    }
-
-    console.log("projects: ", res);
-    result(null, res);
-  });
+  try {
+    return await db
+      .select()
+      .from(projects)
+      .limit(limit)
+      .offset((page - 1) * limit);
+  } catch (error) {
+    throw new Error(error);
+  }
 };
 
 export { create, remove, removeAll, update, findById, findAll };

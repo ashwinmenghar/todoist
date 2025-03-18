@@ -1,6 +1,6 @@
 // import { create, update, remove, findByField } from "../models/user.model.js";
 import { emailValidation, sendResponse } from "../utils/helper.js";
-import { create, find } from "../models/orm/user.model.js";
+import { create, find } from "../models/user.model.js";
 
 // Create new user
 const createUser = (req, res) => {
@@ -25,7 +25,7 @@ const createUser = (req, res) => {
     return sendResponse(res, 400, "User name is required");
   }
 
-  create({name, email}, (err, data) => {
+  create({ name, email }, (err, data) => {
     if (err) {
       console.log(err);
       return sendResponse(res, 500, err.message);

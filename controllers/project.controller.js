@@ -5,7 +5,7 @@ import {
   remove,
   removeAll,
   update,
-} from "../models/orm/project.model.js";
+} from "../models/project.model.js";
 import { sendResponse } from "../utils/helper.js";
 
 // Create a new project
