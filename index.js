@@ -4,10 +4,11 @@ import taskRoutes from "./routes/task.routes.js";
 import commentRoutes from "./routes/comment.routes.js";
 import usersRoutes from "./routes/user.routes.js";
 import { DB } from "./utils/connect.js";
+import dotenv from "dotenv";
 
-DB;
+dotenv.config();
 const app = express();
-const PORT = 8000;
+const PORT = process.env.PORT;
 
 app.use(express.json());
 

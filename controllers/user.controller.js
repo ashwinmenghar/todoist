@@ -1,11 +1,12 @@
-// import { create, update, remove, findByField } from "../models/user.model.js";
 import { emailValidation, sendResponse } from "../utils/helper.js";
-import { create, find } from "../models/user.model.js";
+import { create, findByEmail, removeUser } from "../models/user.model.js";
+import dotenv from "dotenv";
+
+dotenv.config();
+import jwt from "jsonwebtoken";
 
 // Create new user
-const createUser = (req, res) => {
-  console.log("Reached");
-
+const register = async (req, res) => {
   // Validate required fields
   if (!req.body || Object.entries(req.body).length === 0) {
     return sendResponse(res, 400, "User data cannot be empty");
@@ -17,22 +18,50 @@ const createUser = (req, res) => {
     return sendResponse(res, 400, `Invalid email ${email}`);
   }
 
-  // if (findByField("email", email)) {
-  //   return sendResponse(res, 400, `User with email ${email} already exists!`);
-  // }
+  const existingUser = await findByEmail(email);
+  if (existingUser.length > 0) {
+    return sendResponse(res, 400, `User with email ${email} already exists!`);
+  }
 
   if (!name) {
     return sendResponse(res, 400, "User name is required");
   }
 
-  create({ name, email }, (err, data) => {
-    if (err) {
-      console.log(err);
-      return sendResponse(res, 500, err.message);
+  try {
+    const data = await create({ name, email });
+    return sendResponse(res, 201, {
+      message: "User registered successfully",
+      data,
+    });
+  } catch (error) {
+    return sendResponse(res, 500, error.message || "Something went wrong!");
+  }
+};
+
+// Login user
+const login = async (req, res) => {
+  try {
+    if (!req.body || Object.entries(req.body).length === 0) {
+      return sendResponse(res, 400, "User credentials required");
     }
 
-    return sendResponse(res, 200, data);
-  });
+    const { email } = req.body;
+
+    if (!emailValidation(email)) {
+      return sendResponse(res, 400, "Invalid email");
+    }
+
+    const user = await findByEmail(email);
+
+    if (!user) {
+      return sendResponse(res, 404, `User with email ${email} does not exist`);
+    }
+
+    const token = jwt.sign({ ...user[0] }, process.env.JWT_SECRET);
+    return sendResponse(res, 200, { message: "Login successfully", token });
+  } catch (error) {
+    return sendResponse(res, 500, error.messages || "Something went wrong!");
+  }
 };
 
 // Update user
@@ -77,28 +106,29 @@ const createUser = (req, res) => {
 // };
 
 // // Delete User
-// const deleteUser = (req, res) => {
-//   const userId = Number(req.params.id);
+const deleteUser = async (req, res) => {
+  const userId = Number(req.user.id);
 
-//   // Validate required fields
-//   if (!userId || isNaN(userId)) {
-//     return sendResponse(res, 400, "Invalid user id");
-//   }
+  // Validate required fields
+  if (!userId || isNaN(userId)) {
+    return sendResponse(res, 400, "Invalid user id");
+  }
 
-//   remove(userId, (err) => {
-//     if (err) {
-//       if (err.kind === "not_found") {
-//         return sendResponse(res, 404, `Not found user with id ${userId}`);
-//       }
-
-//       return sendResponse(res, 404, `Error updating user with id ${userId}`);
-//     }
-
-//     return sendResponse(res, 200, "User deleted successfully");
-//   });
-// };
+  try {
+    await removeUser(userId);
+    return sendResponse(res, 200, "User deleted successfully");
+  } catch (error) {
+    return sendResponse(
+      res,
+      404,
+      error.message || `Error updating user with id ${userId}`
+    );
+  }
+};
 
 export {
-  createUser,
-  //  updateUser, deleteUser
+  register,
+  login,
+  deleteUser,
+  //  updateUser,
 };

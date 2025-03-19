@@ -17,7 +17,7 @@ const createComment = async (req, res) => {
 
   try {
     let data = await create({ project_id, task_id, content });
-    return sendResponse(res, 200, {
+    return sendResponse(res, 201, {
       message: "Comment created successfully",
       data,
     });

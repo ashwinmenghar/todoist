@@ -23,8 +23,8 @@ const createProject = async (req, res) => {
 
   try {
     // Store project
-    let data = await create({ name, color, is_favorite });
-    return sendResponse(res, 200, {
+    let data = await create({ name, color, is_favorite, user_id: req.user.id });
+    return sendResponse(res, 201, {
       message: "Project created successfully!",
       data,
     });
@@ -47,11 +47,8 @@ const updateProject = async (req, res) => {
   }
 
   try {
-    let data = await update(projectId, req.body);
-    return sendResponse(res, 200, {
-      message: "Project updated successfully!",
-      data,
-    });
+    await update(projectId, req.body);
+    return sendResponse(res, 200, "Project updated successfully!");
   } catch (error) {
     return sendResponse(
       res,

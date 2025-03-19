@@ -5,19 +5,20 @@ import {
   findComment,
   updateComment,
 } from "../controllers/comment.controller.js";
+import { verifyToken } from "../middlewares/verify.js";
 
 const router = express.Router();
 
 // Create new comment
-router.post("/", createComment);
+router.post("/", verifyToken, createComment);
 
 // Get comments by projectId or taskId
-router.get("/", findComment);
+router.get("/", verifyToken, findComment);
 
 // Update a comment
-router.patch("/:id", updateComment);
+router.patch("/:id", verifyToken, updateComment);
 
 // Delete a comment
-router.delete("/:id", deleteComment);
+router.delete("/:id", verifyToken, deleteComment);
 
 export default router;

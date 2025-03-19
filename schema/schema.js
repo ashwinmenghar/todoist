@@ -6,6 +6,7 @@ export const users = sqliteTable("users", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(),
   email: text("email").unique(),
+  deleted_at: date("deleted_at").default(null),
 });
 
 export const projects = sqliteTable("projects", {

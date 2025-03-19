@@ -1,6 +1,6 @@
 import { and, eq, like } from "drizzle-orm";
 import db from "../config/db.js";
-import { tasks } from "../schema/schema.js";
+import { projects, tasks } from "../schema/schema.js";
 
 // CREATE A TASK
 const create = async (newTask) => {
@@ -68,18 +68,28 @@ const find = async (req) => {
 
   let page = Number(req.query["page"]) || 1;
   let limit = 10;
+  let userId = Number(req.user.id);
 
   const conditions = [];
+
+  // Add dynamic conditions
   Object.entries(filterMap).forEach(([key, { clause }]) => {
     if (req.query[key] !== undefined) {
       conditions.push(clause(req.query[key]));
     }
   });
 
+  if (userId) {
+    conditions.push(eq(projects.user_id, userId));
+  }
+
   try {
     return await db
-      .select()
+      .select({
+        ...tasks,
+      })
       .from(tasks)
+      .leftJoin(projects, eq(projects.id, tasks.project_id)) // Join projects
       .where(conditions.length > 0 ? and(...conditions) : undefined)
       .limit(limit)
       .offset((page - 1) * limit);

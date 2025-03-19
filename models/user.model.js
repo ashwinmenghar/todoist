@@ -1,26 +1,44 @@
+import { eq } from "drizzle-orm";
 import db from "../config/db.js";
 import { users } from "../schema/schema.js";
 
 // Insert a new user
-const create = async (newUser, result) => {
+const create = async (newUser) => {
   try {
     const res = await db.insert(users).values(newUser);
-    result(null, { id: res.lastInsertRowid, newUser });
+    return { id: res.lastInsertRowid, ...newUser };
   } catch (error) {
-    console.log("error", error.message);
-    result(error);
+    throw new Error(error);
   }
 };
 
-const find = async () => {
+// Find user by ID
+const findByEmail = async (email) => {
   try {
-    // Fetch users
-    const allUsers = await db.select().from(users);
-    console.log(allUsers);
-    return allUsers;
+    return await db.select().from(users).where(eq(users.email, email));
   } catch (error) {
-    console.log(error.message);
+    throw new Error(error);
   }
 };
 
-export { create, find };
+// Remove user by Id
+const removeUser = async (userId) => {
+  console.log(userId);
+
+  try {
+    const userResponse = await db
+      .update(users)
+      .set({
+        deleted_at: new Date().toISOString(),
+      })
+      .where(eq(users.id, userId));
+
+    console.log("User deleted successfully");
+
+    return userResponse;
+  } catch (error) {
+    throw new Error(error);
+  }
+};
+
+export { create, findByEmail, removeUser };

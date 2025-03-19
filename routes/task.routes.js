@@ -5,19 +5,20 @@ import {
   removeTask,
   updateTask,
 } from "../controllers/task.controller.js";
+import { verifyToken } from "../middlewares/verify.js";
 
 const router = express.Router();
 
 // Get task
-router.get("/", findTask);
+router.get("/", verifyToken, findTask);
 
 // Create a task
-router.post("/", createTask);
+router.post("/", verifyToken, createTask);
 
 // Update a task by id
-router.patch("/:id", updateTask);
+router.patch("/:id", verifyToken, updateTask);
 
 // Remove task by id
-router.delete("/:id", removeTask);
+router.delete("/:id", verifyToken, removeTask);
 
 export default router;

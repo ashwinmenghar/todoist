@@ -9,7 +9,7 @@ const create = async (newproject) => {
     const res = await db.insert(projects).values(newproject);
 
     console.log("New project created!");
-    return { id: res.lastInsertRowid, data: newproject };
+    return { id: res.lastInsertRowid, ...newproject };
   } catch (error) {
     throw new Error(error);
   }

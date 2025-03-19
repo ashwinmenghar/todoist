@@ -1,19 +1,19 @@
 import express from "express";
-import {
-  createUser,
-  // deleteUser,
-  // updateUser,
-} from "../controllers/user.controller.js";
+import { login, register, deleteUser } from "../controllers/user.controller.js";
+import { verifyToken } from "../middlewares/verify.js";
 
 const router = express.Router();
 
-// Create user
-router.post("/", createUser);
+// Register user
+router.post("/register", register);
+
+// Login user
+router.post("/login", login);
 
 // Update user
 // router.put("/:id", updateUser);
 
 // // Delete user
-// router.delete("/:id", deleteUser);
+router.delete("/", verifyToken, deleteUser);
 
 export default router;

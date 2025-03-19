@@ -7,25 +7,26 @@ import {
   removeProject,
   updateProject,
 } from "../controllers/project.controller.js";
+import { verifyToken } from "../middlewares/verify.js";
 
 const router = express.Router();
 
 // Create a project
-router.post("/", createProject);
+router.post("/", verifyToken, createProject);
 
 // Update a project
-router.patch("/:id", updateProject);
+router.patch("/:id", verifyToken, updateProject);
 
 // Find a project
-router.get("/:id", findProject);
+router.get("/:id", verifyToken, findProject);
 
 // Find all projects
-router.get("/", findAllProjects);
+router.get("/", verifyToken, findAllProjects);
 
 // Remove a project
-router.delete("/:id", removeProject);
+router.delete("/:id", verifyToken, removeProject);
 
 // Remove all projects
-router.delete("/", removeAllProject);
+router.delete("/", verifyToken, removeAllProject);
 
 export default router;
